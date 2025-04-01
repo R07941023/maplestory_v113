@@ -20,7 +20,7 @@ function start() {
 	var it = party.iterator();
 	while (it.hasNext()) {
 	    var cPlayer = it.next();
-	    if ((cPlayer.getLevel() >= 21 && cPlayer.getLevel() <= 30) || cPlayer.getJobId() == 900) {
+	    if ((cPlayer.getLevel() >= 1 && cPlayer.getLevel() <= 200) || cPlayer.getJobId() == 900) {
 		levelValid += 1;
 	    } else {
 		next = false;
@@ -29,9 +29,9 @@ function start() {
 		inMap += (cPlayer.getJobId() == 900 ? 4 : 1);
 	    }
 	}
-	if (party.size() > 4 || inMap < 4) {
-	    next = false;
-	}
+	// if (party.size() > 4 || inMap < 4) {
+	//     next = false;
+	// }
 	if (next) {
 	    var em = cm.getEventManager("KerningPQ");
 	    if (em == null) {
@@ -51,7 +51,7 @@ function start() {
 		cm.removeAll(4001007);
 	    }
 	} else {
-	    cm.sendOk("你的隊伍需要四個人,等級必須在21-30之間,請確認你的隊友有沒有都在這裡,或是裡面已經有人了!");
+	    cm.sendOk("你的隊伍需要四個人,等級必須在1-200之間,請確認你的隊友有沒有都在這裡,或是裡面已經有人了!");
 		cm.dispose();
 		return;
 	}

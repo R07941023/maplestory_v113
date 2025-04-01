@@ -285,7 +285,14 @@ function rectanglestages(cm) {
                     }
                     // Compare to correct positions
                     // First, are there 3 players on the correct positions?
-                    if (totplayers == 3 || debug) {
+                    if (totplayers < 3) {
+                        // Do clear
+                        clear(curMap, eim, cm);
+                        var exp = (Math.pow(2, curMap) * 50);
+                        cm.givePartyExp(exp, party);
+                        cm.dispose();
+                    }
+                    else if (totplayers == 3 || debug) {
                         var combo = curcombo[parseInt(eim.getProperty("stage" + nthtext + "combo"))];
                         // Debug
                         // Combo = curtestcombo;
@@ -313,7 +320,7 @@ function rectanglestages(cm) {
                             }
                             cm.sendNext(outstring);
                         } else {
-                            cm.sendNext("嗨，歡迎來到第 " + nthtext + " 階段. 在我旁邊，你會看到一些 " + nthobj + ", #b你需要三名隊員掛在上面猜我的答案，如果猜對就讓你過關，加油吧！ \r\n喔~對了不能#r" + nthpos + "不然會不能過關哦！");
+                            cm.sendNext("嗨2，歡迎來到第 " + nthtext + " 階段. 在我旁邊，你會看到一些 " + nthobj + ", #b你需要三名隊員掛在上面猜我的答案，如果猜對就讓你過關，加油吧！ \r\n喔~對了不能#r" + nthpos + "不然會不能過關哦！");
                         }
                         cm.dispose();
                     }
