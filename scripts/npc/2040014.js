@@ -10,7 +10,7 @@ function action(mode, type, selection) {
 	var c = cm.getPlayer();
 	var VipMedal = c.getVipMedal() ? "#r顯示" : "#b未顯示";
 	if (!c.isVip()) {
-		cm.sendNext("歡迎來到辛巴谷v113");
+		cm.sendNext("歡迎來到台積谷v113");
 		cm.dispose();
 		return
 	}

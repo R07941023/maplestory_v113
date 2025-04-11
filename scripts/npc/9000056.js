@@ -157,7 +157,7 @@ function action(mode, type, selection) {
 		if (medal != null) {
 			medaltext = "<" + MapleItemInformationProvider.getInstance().getName(medal.getItemId()) + "> ";
 		} else {
-			medaltext = "<辛巴谷粉絲> "
+			medaltext = "<台積谷粉絲> "
 		}
         World.Broadcast.broadcastMessage(MaplePacketCreator.getGachaponMega(medaltext + cm.getPlayer().getName(), " : " + text, statsSel, 0));
         cm.dispose();

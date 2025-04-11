@@ -27,6 +27,6 @@ function cancelSchedule() {
 
 function start() {
     scheduleNew();
-    em.broadcastYellowMsg("[辛巴谷 公告]" + Message[Math.floor(Math.random() * Message.length)]);
+    em.broadcastYellowMsg("[台積谷 公告]" + Message[Math.floor(Math.random() * Message.length)]);
 }
 

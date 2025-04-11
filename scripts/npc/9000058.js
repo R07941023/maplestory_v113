@@ -34,7 +34,7 @@ function action(mode, type, selection) {
 				break;
 			}
 		}
-		cm.sendSimple("#b歡迎來到辛巴谷!!\r\n" +
+		cm.sendSimple("#b歡迎來到台積谷!!\r\n" +
 			"#L2#我要打開藍色小箱子#l\r\n" +
 			//"#L3#當鋪裡的大蟾蜍錢包(100等以上才能領)解未來東京任務用#l\r\n" +
 			//"#L4#我要把坐騎升級成銀色鬃毛!!#l\r\n" +
@@ -168,7 +168,7 @@ function NewPlayer1() {
 		cm.gainItemPeriod(1002419, 1, 30); //紅葉黑頭巾
 		cm.gainItemPeriod(5370000, 1, 7); //黑板 7天
 		cm.forceCompleteQuest(29934); //完成新手獎勵
-		cm.sendNext("歡迎來到 辛巴谷 請使用 @help/@幫助 了解各式指令\r\n\r\n\r\n遊戲愉快^^");
+		cm.sendNext("歡迎來到 台積谷 請使用 @help/@幫助 了解各式指令\r\n\r\n\r\n遊戲愉快^^");
 		FileoutputUtil.logToFile("logs/Data/新手獎勵.txt", "領取時間:" + FileoutputUtil.NowTime() + "角色名稱:" + cm.getPlayer().getName() + "角色等級: " + cm.getPlayer().getLevel() + "\r\n");
 		cm.getPlayer().setOneTimeLog("新手獎勵");
 		cm.dispose();

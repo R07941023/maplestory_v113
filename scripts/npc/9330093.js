@@ -1,7 +1,7 @@
 ﻿var status = 0;
 
 function start() {
-	cm.sendYesNo("嗨，我是#p9330093# 您參加辛巴谷周年慶累了，是否想出去了???");
+	cm.sendYesNo("嗨，我是#p9330093# 您參加台積谷周年慶累了，是否想出去了???");
 }
 
 function action(mode, type, selection) {

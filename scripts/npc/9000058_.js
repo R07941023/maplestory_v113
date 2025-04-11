@@ -177,7 +177,7 @@ function NewPlayer() {
 			cm.gainItemPeriod(5170000, 1, 30);
 		}
 		cm.forceCompleteQuest(29933); //完成新手獎勵
-		cm.sendOk("歡迎來到 屁屁谷 請使用 @help/@幫助 了解各式指令\r\n\r\n\r\n遊戲愉快^^");
+		cm.sendOk("歡迎來到 台積谷 請使用 @help/@幫助 了解各式指令\r\n\r\n\r\n遊戲愉快^^");
 		cm.dispose();
 		return;
 }

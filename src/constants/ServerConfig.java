@@ -79,7 +79,7 @@ public class ServerConfig {
                     medal = " <VIP" + medal + ">";
                     break;
             }
-        } else if (SERVER_NAME.equals("西西谷")) {
+        } else if (SERVER_NAME.equals("台積谷")) {
             int newtime = 0;
             medal = " ";
             while (lv - newtime != 0) {

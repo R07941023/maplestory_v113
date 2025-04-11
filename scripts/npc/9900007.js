@@ -11,7 +11,7 @@ var msg = "";
 
 function start() {
     if (status = -1) {
-       msg = "歡迎來玩 辛巴谷Ver:113\r\n"+
+       msg = "歡迎來玩 台積谷Ver:113\r\n"+
 			"熱門時段人數都是破千的喔\r\n";
         cm.sendNext(msg);
         cm.dispose();

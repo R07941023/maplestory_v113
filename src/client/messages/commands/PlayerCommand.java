@@ -309,7 +309,7 @@ public class PlayerCommand {
                 }           
             
             c.getPlayer().dropMessage(1, "解卡完畢..");
-            c.getPlayer().dropMessage(6,"＊＊＊＊＊＊＊歡迎來到測試谷＊＊＊＊＊＊＊");  
+            c.getPlayer().dropMessage(6,"＊＊＊＊＊＊＊歡迎來到台積谷＊＊＊＊＊＊＊");  
             c.getPlayer().dropMessage(6, "當前系統時間" + FilePrinter.getLocalDateString() + " 星期" + getDayOfWeek());
             c.getPlayer().dropMessage(6, "目前等級倍率" + (Math.round(人物經驗)) + "倍");            
             c.getPlayer().dropMessage(6, "經驗值倍率 " + ((Math.round(c.getPlayer().getEXPMod()) * 100) * Math.round(c.getPlayer().getStat().expBuff / 100.0) + (c.getPlayer().getStat().equippedFairy ? c.getPlayer().getFairyExp() : 0)) + "%, 掉寶倍率 " + Math.round(c.getPlayer().getDropMod() * (c.getPlayer().getStat().dropBuff / 100.0) * 100) + "%, 楓幣倍率 " + Math.round((c.getPlayer().getStat().mesoBuff / 100.0) * 100) + "% VIP經驗加成：" + c.getPlayer().getVipExpRate() + "%");
