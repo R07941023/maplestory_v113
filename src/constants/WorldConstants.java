@@ -123,6 +123,12 @@ public class WorldConstants {
         MAX_CHAR_VIEW = ServerProperties.getProperty("server.settings.maxCharView", MAX_CHAR_VIEW);
         GMITEMS = ServerProperties.getProperty("server.settings.gmitems", GMITEMS);
         CS_ENABLE = ServerProperties.getProperty("server.settings.cashshop.enable", CS_ENABLE);
+        try {
+            String worldName = ServerProperties.getProperty("server.settings.world", WORLD.name());
+            WORLD = valueOf(worldName);
+        } catch (IllegalArgumentException ex) {
+            System.err.println("無效的世界名稱設定於 setting.ini: " + ex.getMessage());
+        }
     }
 
     static {
