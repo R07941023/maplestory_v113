@@ -18,7 +18,7 @@ function action(mode, type, selection) {
 	}
 
 	if (status === 0) {
-		cm.sendGetNumber("請輸入想要兌換的顆數. \r\n所需物品為#i4032225#\r\n#r(比值:1#i4032225#x1:#i4032226#x1)\r\n請注意身上背包的空間#k", 1, 1, 100);
+		cm.sendGetNumber("請輸入想要兌換的顆數. \r\n所需物品是從#o2230101#掉落\r\n#r(比值:1#i4032225#x1:#i4032226#x1)\r\n請注意身上背包的空間#k", 1, 1, 100);
 	} else if (status === 1) {
 		slot = selection;
 		if (!cm.haveItem(4032225, slot)) {
