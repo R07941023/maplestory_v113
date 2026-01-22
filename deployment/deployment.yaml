@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: maplestory
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: maplestory
+  template:
+    metadata:
+      labels:
+        app: maplestory
+    spec:
+      hostname: maplestory
+      containers:
+        - name: maplestory
+          image: yenyinglu/maplestory:placeholder
+          env:
+            - name: server_settings_db_password
+              valueFrom:
+                secretKeyRef:
+                  name: keyvault
+                  key: server_settings_db_password
+          ports:
+            - containerPort: 8484
+            - containerPort: 7575
+            - containerPort: 7576
+            - containerPort: 7577
+            - containerPort: 2555
+      restartPolicy: Always
