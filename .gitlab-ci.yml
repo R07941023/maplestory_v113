@@ -1,0 +1,95 @@
+stages:
+  - build
+  - release
+
+.default-build-image: &default-build-image
+  image: docker:29.0.4
+  retry:
+    max: 2
+    when:
+      - always
+  tags:
+    - docker
+  services:
+    - name: docker:dind
+  before_script:
+    - docker info
+  script:
+    - echo "Build $IMAGE_NAME Docker image with root context"                                                                                                                │
+    - docker build -t $DOCKERHUB_USERNAME/$IMAGE_NAME:$IMAGE_TAG -f $DOCKERFILE_PATH/Dockerfile .
+    - echo "Login to Docker Hub"
+    - echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
+    - echo "Push to Docker Hub"
+    - docker push $DOCKERHUB_USERNAME/$IMAGE_NAME:$IMAGE_TAG
+
+build-maplestory-backend:
+  <<: *default-build-image
+  stage: build
+  variables:
+    IMAGE_NAME: maplestory-backend
+    IMAGE_TAG: $CI_COMMIT_SHORT_SHA
+    DOCKERFILE_PATH: .
+    DOCKER_TLS_CERTDIR: ""
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_DRIVER: overlay2
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "dev"'
+
+create-release-mr:
+  stage: release
+  image: alpine:latest
+  variables:
+    IMAGE_TAG: $CI_COMMIT_SHORT_SHA
+  script:
+    - |
+      set -e
+      apk update && apk add git curl
+
+      echo "Updating image tag in deployment files to $IMAGE_TAG"
+      find ./deployment -type f -name "deployment.yaml" -exec sed -i "s|image: \(.*\):.*|image: \1:$IMAGE_TAG|g" {} +
+
+      echo "Checking for changes..."
+      if [ -z "$(git status --porcelain ./deployment)" ]; then
+        echo "No changes detected in deployment files. Skipping MR creation."
+        exit 0
+      fi
+
+      echo "Configuring git..."
+      git config --global user.email "${GITLAB_USER_EMAIL:-'gitlab-ci@example.com'}"
+      git config --global user.name "${GITLAB_USER_NAME:-'GitLab CI'}"
+
+      BRANCH_NAME="release/update-tags-${IMAGE_TAG}"
+
+      echo "Fetching remote branches..."
+      git fetch origin
+
+      if git branch -r | grep -q "origin/${BRANCH_NAME}"; then
+        echo "Branch already exists. Checking out existing branch."
+        git checkout -B "${BRANCH_NAME}" "origin/${BRANCH_NAME}"
+      else
+        echo "Creating new branch: ${BRANCH_NAME}"
+        git checkout -b "${BRANCH_NAME}"
+      fi
+
+      git add ./deployment/
+      git commit -m "Gitlab CI: Update image tags to $IMAGE_TAG" || echo "No commit needed"
+
+      echo "Pushing changes to remote..."
+      git push -f "http://gitlab-ci-token:${GITLAB_API_TOKEN}@${CI_SERVER_HOST}/${CI_PROJECT_PATH}.git" "${BRANCH_NAME}"
+
+      echo "Creating Merge Request (or updating existing MR)..."
+      curl --request POST \
+           --header "PRIVATE-TOKEN: ${GITLAB_API_TOKEN}" \
+           --header "Content-Type: application/json" \
+           --data '{
+             "source_branch": "'"${BRANCH_NAME}"'",
+             "target_branch": "main",
+             "title": "Gitlab CI: Update image tags for '"$IMAGE_TAG"'",
+             "remove_source_branch": true
+           }' \
+           "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/merge_requests" \
+           || echo "MR may already exist — continuing"
+
+      echo "Done."
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "dev"'

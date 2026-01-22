@@ -1,0 +1,1 @@
+mkdir -p classes && javac -d classes -cp "lib/*:src" -encoding UTF-8 src/server/swing/WvsCenter.java && java -cp "classes:lib/*:src" server.swing.WvsCenter
