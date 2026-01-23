@@ -15,7 +15,7 @@ spec:
       hostname: maplestory
       containers:
         - name: maplestory
-          image: yenyinglu/maplestory:6773c409
+          image: yenyinglu/maplestory-backend:1f1f0cff
           env:
             - name: server_settings_db_password
               valueFrom:
