@@ -132,7 +132,12 @@ public class PartyHandler {
                     if (invited.getParty() == null && party != null) {
                         if (invited.getLevel() > 10 || invited.getJob() == 200) {
                             if (party.getMembers().size() < 6) {
-                                invited.getClient().sendPacket(MaplePacketCreator.partyInvite(c.getPlayer(), false));
+                                // Check if invited player is a virtual player (bot) - auto accept
+                                if (server.virtualplayer.VirtualPlayerManager.getInstance().isVirtualPlayer(invited.getId())) {
+                                    server.virtualplayer.VirtualPlayerManager.getInstance().handlePartyInvite(invited.getId(), party.getId());
+                                } else {
+                                    invited.getClient().sendPacket(MaplePacketCreator.partyInvite(c.getPlayer(), false));
+                                }
                             } else {
                                 c.sendPacket(MaplePacketCreator.partyStatusMessage(17));
                             }

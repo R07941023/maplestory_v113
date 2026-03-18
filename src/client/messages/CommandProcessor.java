@@ -298,7 +298,7 @@ public class CommandProcessor {
 
     private static void DoNormalCommand() {
         Class<?>[] CommandFiles = {
-            PlayerCommand.class, PracticerCommand.class, SkilledCommand.class, InternCommand.class, GMCommand.class, AdminCommand.class, GodCommand.class
+            PlayerCommand.class, PracticerCommand.class, SkilledCommand.class, InternCommand.class, GMCommand.class, AdminCommand.class, GodCommand.class, BotCommand.class
         };
         for (Class<?> clasz : CommandFiles) {
             try {

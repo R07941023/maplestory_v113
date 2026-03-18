@@ -141,6 +141,12 @@ public class InterServerHandler {
                 System.setProperty(String.valueOf(playerid), String.valueOf(0));
             }
             LoginServer.removeClient(c);
+
+            // If this character is currently running as a bot, force release it first
+            if (server.virtualplayer.VirtualPlayerManager.getInstance().checkLoginConflict(playerid)) {
+                server.virtualplayer.VirtualPlayerManager.getInstance().forceRelease(playerid);
+            }
+
             player = MapleCharacter.loadCharFromDB(playerid, c, true);
         } else {
             player = MapleCharacter.ReconstructChr(transfer, c, true);
