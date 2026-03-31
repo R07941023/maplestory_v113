@@ -28,6 +28,7 @@ import constants.ServerConstants.CommandType;
 import handling.channel.ChannelServer;
 import handling.login.LoginInformationProvider;
 import handling.world.MapleMessenger;
+import server.virtualplayer.VirtualPlayerManager;
 import handling.world.MapleMessengerCharacter;
 import handling.world.World;
 import java.util.Arrays;
@@ -103,6 +104,10 @@ public class ChatHandler {
                     }
 
                 }
+                // Notify bots on the same map to reply (async, avoid blocking I/O thread)
+                server.Timer.MapTimer.getInstance().schedule(
+                    () -> VirtualPlayerManager.getInstance().notifyMapChat(chr, text), 0);
+
             } else {
                 c.sendPacket(MaplePacketCreator.getItemNotice("在這個地方不能說話。"));
             }

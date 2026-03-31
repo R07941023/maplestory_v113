@@ -9,7 +9,9 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayDeque;
 import java.util.Collection;
+import java.util.Deque;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledFuture;
@@ -26,6 +28,10 @@ public class VirtualPlayerManager {
 
     // Map of character name to character ID for quick lookup
     private final Map<String, Integer> nameToIdCache = new ConcurrentHashMap<>();
+
+    // Per-map chat history buffer: mapId -> last 5 messages ("name: text")
+    private static final int HISTORY_SIZE = 5;
+    private final Map<Integer, Deque<String>> mapChatHistory = new ConcurrentHashMap<>();
 
     // Single shared AI timer for all bots
     private ScheduledFuture<?> globalAiTask = null;
@@ -227,6 +233,42 @@ public class VirtualPlayerManager {
      */
     public Collection<VirtualPlayer> getAllVirtualPlayers() {
         return virtualPlayers.values();
+    }
+
+    /**
+     * Notify all bots on the same map that a player sent a public chat message.
+     * Appends to per-map history buffer, then triggers each bot's AI when buffer hits 5.
+     * Called by ChatHandler after the message is broadcast.
+     */
+    public void notifyMapChat(client.MapleCharacter sender, String message) {
+        if (virtualPlayers.isEmpty()) return;
+
+        int mapId = sender.getMapId();
+
+        // Append to history buffer
+        Deque<String> history = mapChatHistory.computeIfAbsent(mapId, k -> new ArrayDeque<>());
+        synchronized (history) {
+            history.addLast(sender.getName() + ": " + message);
+            if (history.size() > HISTORY_SIZE) history.pollFirst();
+        }
+
+        // Notify bots on this map
+        for (VirtualPlayer bot : virtualPlayers.values()) {
+            if (bot.getCharacter().getMapId() == mapId) {
+                bot.onChat(sender, message, history);
+            }
+        }
+    }
+
+    /**
+     * Append a bot's own reply into the map history buffer.
+     */
+    void appendBotChat(int mapId, String botName, String message) {
+        Deque<String> history = mapChatHistory.computeIfAbsent(mapId, k -> new ArrayDeque<>());
+        synchronized (history) {
+            history.addLast(botName + ": " + message);
+            if (history.size() > HISTORY_SIZE) history.pollFirst();
+        }
     }
 
     /**

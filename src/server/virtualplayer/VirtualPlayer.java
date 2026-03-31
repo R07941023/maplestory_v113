@@ -15,6 +15,9 @@ import tools.MaplePacketCreator;
 import tools.Pair;
 import tools.packet.MobPacket;
 
+import java.util.Deque;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import java.awt.Point;
 import java.util.ArrayList;
 import java.util.List;
@@ -350,6 +353,64 @@ public class VirtualPlayer {
         int damage = minDmg + (int) (Math.random() * (maxDmg - minDmg + 1));
 
         return Math.max(damage, 1); // At least 1 damage
+    }
+
+    // ==================== Chat AI ====================
+
+    private static final int AI_TRIGGER_COUNT = 1; // 累積幾筆後呼叫 AI
+    private final AtomicInteger chatCounter = new AtomicInteger(0);
+    private final java.util.concurrent.atomic.AtomicBoolean aiPending = new java.util.concurrent.atomic.AtomicBoolean(false);
+
+    /**
+     * Called when someone on the same map sends a public chat message.
+     * Counts messages; every AI_TRIGGER_COUNT messages calls the AI API and replies.
+     *
+     * @param history Shared per-map history buffer (最近 5 筆，包含 bot 自己)
+     */
+    public void onChat(MapleCharacter sender, String message, Deque<String> history) {
+        if (!active) return;
+        if (sender.getId() == character.getId()) return;
+        if (VirtualPlayerManager.getInstance().isVirtualPlayer(sender.getId())) return;
+
+        if (chatCounter.incrementAndGet() < AI_TRIGGER_COUNT) return;
+        chatCounter.set(0);
+
+        // 若 AI 仍在等待回覆，跳過此次觸發
+        if (!aiPending.compareAndSet(false, true)) return;
+
+        // 取當前 history snapshot
+        String historySnapshot;
+        synchronized (history) {
+            historySnapshot = String.join("\n", history);
+        }
+
+        final String role = character.getName();
+        final String snap = historySnapshot;
+
+        // 非同步呼叫 AI，避免阻塞 scheduler thread
+        server.Timer.MapTimer.getInstance().schedule(() -> {
+            try {
+                String reply = AiApiClient.chat(role, snap);
+                if (reply != null && !reply.isEmpty()) {
+                    say(reply);
+                    VirtualPlayerManager.getInstance().appendBotChat(
+                        character.getMapId(), role, reply);
+                }
+            } finally {
+                aiPending.set(false);
+            }
+        }, 0);
+    }
+
+    /**
+     * Broadcast a chat message from this bot to everyone on its map.
+     */
+    private void say(String text) {
+        MapleMap map = character.getMap();
+        if (map == null) return;
+
+        byte[] packet = MaplePacketCreator.getChatText(character.getId(), text, false, 0);
+        map.broadcastMessage(packet);
     }
 
     // ==================== Party AI ====================
