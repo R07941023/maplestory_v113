@@ -39,15 +39,21 @@ public class VirtualPlayer {
     private State currentState = State.IDLE;
 
     // AI settings
-    private static final int ATTACK_RANGE = 200; // pixels to attack monsters (X distance)
-    private static final int SEARCH_RANGE = 600; // pixels to search for monsters (X distance)
+    private static final int ATTACK_RANGE_MIN = 1;
+    private static final int ATTACK_RANGE_MAX = 30;
+    private static final int SEARCH_RANGE = 6000; // pixels to search for monsters (X distance)
     private static final int SAME_PLATFORM_Y = 60; // max Y difference to consider same platform
     private static final long ATTACK_COOLDOWN = 1000; // ms between attacks
     private static final long MOVE_COOLDOWN = 200;   // ms between movements
     private static final int WALK_SPEED = 125;        // pixels per second (standard walk speed)
 
+    private int attackRange = ATTACK_RANGE_MIN + (int) (Math.random() * (ATTACK_RANGE_MAX - ATTACK_RANGE_MIN + 1));
     private long lastAttackTime = 0;
     private long lastMoveTime = 0;
+    private long lastYSyncTime = 0;
+    private long lastExpressionTime = 0;
+    private static final long Y_SYNC_INTERVAL = 5000;
+    private static final long EXPRESSION_INTERVAL = 60000; // ms between random expressions
     private boolean active = false;
 
     // Adaptive tick: when idle, only process every IDLE_TICK_SKIP ticks (= 1000ms)
@@ -93,7 +99,8 @@ public class VirtualPlayer {
         if (map == null) return;
 
         character.setMap(map);
-        character.setPosition(owner != null ? owner.getPosition() : map.getPortal(0).getPosition());
+        Point spawnPos = owner != null ? owner.getPosition() : map.getPortal(0).getPosition();
+        character.setPosition(snapToGround(map, spawnPos));
         map.addPlayer(character);
     }
 
@@ -144,6 +151,21 @@ public class VirtualPlayer {
             return;
         }
 
+        // Random facial expression every minute
+        if (currentTime - lastExpressionTime >= EXPRESSION_INTERVAL) {
+            lastExpressionTime = currentTime;
+            randomExpression();
+        }
+
+        // Priority 2: Re-sync Y axis if bot is on wrong platform (every 5s)
+        if (currentTime - lastYSyncTime >= Y_SYNC_INTERVAL) {
+            lastYSyncTime = currentTime;
+            if (shouldSyncY()) {
+                syncYToOwner();
+                return;
+            }
+        }
+
         // Priority 2: Attack nearby monsters (if in range)
         if (shouldAttack(currentTime)) {
             attackNearbyMonster();
@@ -154,6 +176,44 @@ public class VirtualPlayer {
         if (shouldMoveToMonster(currentTime)) {
             moveTowardsMonster();
         }
+    }
+
+    private static final int FLOOR_CHANGE_Y = 120; // Y diff to consider owner changed floor
+
+    private boolean shouldSyncY() {
+        if (owner == null || owner.getMapId() != character.getMapId()) return false;
+        return Math.abs(character.getPosition().y - owner.getPosition().y) > FLOOR_CHANGE_Y;
+    }
+
+    private void syncYToOwner() {
+        MapleMap map = character.getMap();
+        if (map == null) return;
+
+        Point groundPos = snapToGround(map, new Point(character.getPosition().x, owner.getPosition().y));
+        map.removePlayer(character);
+        character.setPosition(groundPos);
+        map.addPlayer(character);
+    }
+
+    // ==================== Utility ====================
+
+    /**
+     * Given a position, find the foothold below it and return a grounded point.
+     * Also updates the character's fh so it doesn't float in mid-air.
+     */
+    private void randomExpression() {
+        MapleMap map = character.getMap();
+        if (map == null) return;
+        int expression = (int) (Math.random() * 8);
+        map.broadcastMessage(MaplePacketCreator.facialExpression(character, expression));
+    }
+
+    private Point snapToGround(MapleMap map, Point pos) {
+        if (map.getFootholds() == null) return pos;
+        server.maps.MapleFoothold fh = map.getFootholds().findBelow(pos);
+        if (fh == null) return pos;
+        character.setFh(fh.getId());
+        return new Point(pos.x, fh.getY1());
     }
 
     // ==================== Follow Owner to Map ====================
@@ -169,6 +229,8 @@ public class VirtualPlayer {
         MapleMap targetMap = owner.getMap();
         if (targetMap == null) return;
 
+        Point groundPos = snapToGround(targetMap, targetMap.getPortal(0).getPosition());
+        character.setPosition(groundPos);
         character.changeMap(targetMap, targetMap.getPortal(0));
     }
 
@@ -185,7 +247,7 @@ public class VirtualPlayer {
 
         // Check if we're already in attack range (X distance only)
         int xDist = Math.abs(character.getPosition().x - monster.getPosition().x);
-        return xDist > ATTACK_RANGE;
+        return xDist > attackRange;
     }
 
     private void moveTowardsMonster() {
@@ -228,7 +290,8 @@ public class VirtualPlayer {
         character.getMap().broadcastMessage(character,
             MaplePacketCreator.movePlayer(character.getId(), moves, current), false);
 
-        // Update position on server
+        // Update stance and position on server (mirrors real PlayerHandler flow)
+        handling.channel.handler.MovementParse.updatePosition(moves, character, 0);
         character.getMap().movePlayer(character, newPos);
     }
 
@@ -238,11 +301,11 @@ public class VirtualPlayer {
         if (currentTime - lastAttackTime < ATTACK_COOLDOWN) return false;
         if (!character.isAlive()) return false;
 
-        return findMonsterOnPlatform(ATTACK_RANGE) != null;
+        return findMonsterOnPlatform(attackRange) != null;
     }
 
     private void attackNearbyMonster() {
-        MapleMonster monster = findMonsterOnPlatform(ATTACK_RANGE);
+        MapleMonster monster = findMonsterOnPlatform(attackRange);
         if (monster == null) return;
 
         lastAttackTime = System.currentTimeMillis();
@@ -250,6 +313,10 @@ public class VirtualPlayer {
 
         // Calculate damage (basic attack)
         int damage = calculateBasicAttackDamage();
+
+        // Broadcast damage number before applying damage (monster may die in damage())
+        byte[] damagePacket = MobPacket.damageMonster(monster.getObjectId(), damage);
+        character.getMap().broadcastMessage(damagePacket, monster.getPosition());
 
         // Apply damage to monster
         monster.damage(character, damage, true);
@@ -293,10 +360,6 @@ public class VirtualPlayer {
         // Broadcast attack animation to everyone on the map using position-based broadcast
         // This matches how real player attacks are broadcast
         character.getMap().broadcastMessage(packet, character.getPosition());
-
-        // Also broadcast the damage number on the monster so players can see it
-        byte[] damagePacket = MobPacket.damageMonster(monster.getObjectId(), damage);
-        character.getMap().broadcastMessage(damagePacket, monster.getPosition());
 
         // Reset state if monster died
         if (!monster.isAlive()) {

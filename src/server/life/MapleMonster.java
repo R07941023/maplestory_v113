@@ -456,7 +456,7 @@ public class MapleMonster extends AbstractLoadedMapleLife {
             highestDamageChar = attacker.getId();
         }
 
-        if (exp > 0) {
+        if (exp > 0 && !server.virtualplayer.VirtualPlayerManager.getInstance().isVirtualPlayer(attacker.getId())) {
             attacker.gainExpMonster(exp, true, highestDamage, pty, classBounsExpPercent, Premium_Bonus_EXP_PERCENT, this);
         }
         attacker.mobKilled(getId(), lastskillID);
