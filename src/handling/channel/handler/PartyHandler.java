@@ -130,10 +130,10 @@ public class PartyHandler {
                 final MapleCharacter invited = c.getChannelServer().getPlayerStorage().getCharacterByName(slea.readMapleAsciiString());
                 if (invited != null) {
                     if (invited.getParty() == null && party != null) {
-                        if (invited.getLevel() > 10 || invited.getJob() == 200) {
+                        boolean isVirtualPlayer = server.virtualplayer.VirtualPlayerManager.getInstance().isVirtualPlayer(invited.getId());
+                        if (isVirtualPlayer || invited.getLevel() > 10 || invited.getJob() == 200) {
                             if (party.getMembers().size() < 6) {
-                                // Check if invited player is a virtual player (bot) - auto accept
-                                if (server.virtualplayer.VirtualPlayerManager.getInstance().isVirtualPlayer(invited.getId())) {
+                                if (isVirtualPlayer) {
                                     server.virtualplayer.VirtualPlayerManager.getInstance().handlePartyInvite(invited.getId(), party.getId());
                                 } else {
                                     invited.getClient().sendPacket(MaplePacketCreator.partyInvite(c.getPlayer(), false));
