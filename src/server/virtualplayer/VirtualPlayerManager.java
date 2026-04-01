@@ -272,6 +272,24 @@ public class VirtualPlayerManager {
     }
 
     /**
+     * Called when an owner (real player) changes map.
+     * Immediately moves all bots owned by that player to the new map.
+     */
+    public void notifyOwnerMapChange(MapleCharacter owner) {
+        if (virtualPlayers.isEmpty()) return;
+        for (VirtualPlayer bot : virtualPlayers.values()) {
+            if (bot.isActive() && bot.getOwner() != null && bot.getOwner().getId() == owner.getId()) {
+                try {
+                    bot.changeMapToOwner();
+                } catch (Exception e) {
+                    System.err.println("[VirtualPlayerManager] Error following owner map change for "
+                            + bot.getCharacter().getName() + ": " + e.getMessage());
+                }
+            }
+        }
+    }
+
+    /**
      * Handle party invite for a virtual player
      */
     public void handlePartyInvite(int characterId, int partyId) {

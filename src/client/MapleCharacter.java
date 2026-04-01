@@ -2529,6 +2529,10 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                 setFh(0);
                 to.addPlayer(this);
                 stats.relocHeal();
+                // Notify virtual player bots to follow owner to new map
+                if (!server.virtualplayer.VirtualPlayer.isVirtualPlayer(this)) {
+                    server.virtualplayer.VirtualPlayerManager.getInstance().notifyOwnerMapChange(this);
+                }
             }
         }
         if (this.getCheckedEffectAmulet()) {

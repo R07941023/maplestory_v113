@@ -223,7 +223,7 @@ public class VirtualPlayer {
         return character.getMapId() != owner.getMapId();
     }
 
-    private void changeMapToOwner() {
+    void changeMapToOwner() {
         if (owner == null) return;
 
         MapleMap targetMap = owner.getMap();
@@ -276,7 +276,7 @@ public class VirtualPlayer {
         Point newPos = new Point(current.x + dx, targetY);
 
         // newstate: 1 = walk right, 2 = walk left
-        int walkState = (direction > 0) ? 1 : 2;
+        int walkState = (direction > 0) ? 2 : 3;
 
         // Create movement packet (type 0 = absolute position + velocity)
         List<LifeMovementFragment> moves = new ArrayList<>();
