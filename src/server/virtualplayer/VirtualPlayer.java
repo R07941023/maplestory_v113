@@ -51,9 +51,7 @@ public class VirtualPlayer {
     private long lastAttackTime = 0;
     private long lastMoveTime = 0;
     private long lastYSyncTime = 0;
-    private long lastExpressionTime = 0;
     private static final long Y_SYNC_INTERVAL = 5000;
-    private static final long EXPRESSION_INTERVAL = 60000; // ms between random expressions
     private boolean active = false;
 
     // Adaptive tick: when idle, only process every IDLE_TICK_SKIP ticks (= 1000ms)
@@ -151,12 +149,6 @@ public class VirtualPlayer {
             return;
         }
 
-        // Random facial expression every minute
-        if (currentTime - lastExpressionTime >= EXPRESSION_INTERVAL) {
-            lastExpressionTime = currentTime;
-            randomExpression();
-        }
-
         // Priority 2: Re-sync Y axis if bot is on wrong platform (every 5s)
         if (currentTime - lastYSyncTime >= Y_SYNC_INTERVAL) {
             lastYSyncTime = currentTime;
@@ -201,13 +193,6 @@ public class VirtualPlayer {
      * Given a position, find the foothold below it and return a grounded point.
      * Also updates the character's fh so it doesn't float in mid-air.
      */
-    private void randomExpression() {
-        MapleMap map = character.getMap();
-        if (map == null) return;
-        int expression = (int) (Math.random() * 8);
-        map.broadcastMessage(MaplePacketCreator.facialExpression(character, expression));
-    }
-
     private Point snapToGround(MapleMap map, Point pos) {
         if (map.getFootholds() == null) return pos;
         server.maps.MapleFoothold fh = map.getFootholds().findBelow(pos);
@@ -453,16 +438,25 @@ public class VirtualPlayer {
         // 非同步呼叫 AI，避免阻塞 scheduler thread
         server.Timer.MapTimer.getInstance().schedule(() -> {
             try {
-                String reply = AiApiClient.chat(role, snap);
-                if (reply != null && !reply.isEmpty()) {
-                    say(reply);
+                AiApiClient.AiResult result = AiApiClient.chat(role, snap);
+                if (result.message != null && !result.message.isEmpty()) {
+                    if (result.feeling >= 1 && result.feeling <= 7) {
+                        showExpression(result.feeling);
+                    }
+                    say(result.message);
                     VirtualPlayerManager.getInstance().appendBotChat(
-                        character.getMapId(), role, reply);
+                        character.getMapId(), role, result.message);
                 }
             } finally {
                 aiPending.set(false);
             }
         }, 0);
+    }
+
+    private void showExpression(int expressionId) {
+        MapleMap map = character.getMap();
+        if (map == null) return;
+        map.broadcastMessage(MaplePacketCreator.facialExpression(character, expressionId));
     }
 
     /**

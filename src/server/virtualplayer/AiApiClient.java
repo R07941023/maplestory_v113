@@ -14,29 +14,40 @@ import java.nio.charset.StandardCharsets;
  *   { "character": "<botName>", "context": "<history>" }
  *
  * Response (JSON):
- *   { "messages": "<reply>" }
- *   Empty string means the bot should not reply.
+ *   { "messages": "<reply>", "feeling": <1-7> }
+ *   Empty messages means the bot should not reply.
+ *   feeling maps directly to facial expression ID (1-7); 0 means no expression change.
  */
 public class AiApiClient {
+
+    public static class AiResult {
+        public final String message;
+        public final int feeling; // 0 = no expression, 1-7 = expression ID
+
+        public AiResult(String message, int feeling) {
+            this.message = message;
+            this.feeling = feeling;
+        }
+    }
 
     private static final String API_URL = System.getenv("N8N_MAPLESTORY_CHARACTER_URL");
     private static final String AI_API_USER = System.getenv("N8N_MAPLESTORY_CHARACTER_USER");
     private static final String AI_API_PASSWORD = System.getenv("N8N_MAPLESTORY_CHARACTER_PASSWORD");
-    private static final int TIMEOUT_MS = 30000;
+    private static final int TIMEOUT_MS = 90000;
 
     private AiApiClient() {}
 
     /**
-     * Call AI API and return the reply text.
+     * Call AI API and return the reply text with feeling.
      *
      * @param role    Bot character name (角色)
      * @param history Concatenated chat history string (歷史對話)
-     * @return Reply string, or empty string if bot should stay silent
+     * @return AiResult containing message and feeling (0 if absent)
      */
-    public static String chat(String role, String history) {
+    public static AiResult chat(String role, String history) {
         if (API_URL == null || API_URL.isEmpty()) {
             System.err.println("[AiApiClient] N8N_MAPLESTORY_CHARACTER_URL env var not set");
-            return "";
+            return new AiResult("", 0);
         }
         try {
             String payload = buildPayload(role, history);
@@ -61,15 +72,15 @@ public class AiApiClient {
             int status = conn.getResponseCode();
             if (status != 200) {
                 System.err.println("[AiApiClient] API returned status " + status);
-                return "";
+                return new AiResult("", 0);
             }
 
             String body = readStream(conn.getInputStream());
-            return parseMessages(body);
+            return parseResponse(body);
 
         } catch (Exception e) {
             System.err.println("[AiApiClient] Request failed: " + e.getMessage());
-            return "";
+            return new AiResult("", 0);
         }
     }
 
@@ -88,11 +99,15 @@ public class AiApiClient {
     }
 
     /**
-     * Parse the "messages" field from the JSON response.
-     * Supports both flat JSON { "messages": "..." } and array [{ "messages": "..." }]
+     * Parse "messages" and "feeling" fields from the JSON response.
+     * Supports both flat JSON { ... } and array [{ ... }]
      */
-    private static String parseMessages(String json) {
-        String key = "\"messages\"";
+    private static AiResult parseResponse(String json) {
+        return new AiResult(parseStringField(json, "messages"), parseIntField(json, "feeling"));
+    }
+
+    private static String parseStringField(String json, String field) {
+        String key = "\"" + field + "\"";
         int keyIdx = json.indexOf(key);
         if (keyIdx == -1) return "";
 
@@ -110,6 +125,28 @@ public class AiApiClient {
 
         if (quoteEnd >= json.length()) return "";
         return json.substring(quoteStart + 1, quoteEnd);
+    }
+
+    private static int parseIntField(String json, String field) {
+        String key = "\"" + field + "\"";
+        int keyIdx = json.indexOf(key);
+        if (keyIdx == -1) return 0;
+
+        int colonIdx = json.indexOf(':', keyIdx + key.length());
+        if (colonIdx == -1) return 0;
+
+        int i = colonIdx + 1;
+        while (i < json.length() && (json.charAt(i) == ' ' || json.charAt(i) == '\t')) i++;
+
+        int start = i;
+        while (i < json.length() && Character.isDigit(json.charAt(i))) i++;
+
+        if (start == i) return 0;
+        try {
+            return Integer.parseInt(json.substring(start, i));
+        } catch (NumberFormatException e) {
+            return 0;
+        }
     }
 
     private static String escapeJson(String s) {
