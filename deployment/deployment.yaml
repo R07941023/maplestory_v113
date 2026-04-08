@@ -17,11 +17,20 @@ spec:
         - name: maplestory
           image: yenyinglu/maplestory-backend:1f1f0cff
           env:
+            - name: N8N_MAPLESTORY_CHARACTER_URL
+              value: https://n8n.ai.svc.cluster.local/webhook/27152130-ef4d-4da4-8787-e75dcb13d5e3
+            - name: N8N_MAPLESTORY_CHARACTER_USER
+              value: maplestory-character
             - name: server_settings_db_password
               valueFrom:
                 secretKeyRef:
                   name: keyvault
                   key: server_settings_db_password
+            - name: N8N_MAPLESTORY_CHARACTER_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: keyvault
+                  key: N8N_MAPLESTORY_CHARACTER_PASSWORD
           ports:
             - containerPort: 8484
             - containerPort: 7575
