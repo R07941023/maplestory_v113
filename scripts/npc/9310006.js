@@ -17,7 +17,7 @@ function start() {
 	var it = party.iterator();
 	while (it.hasNext()) {
 	    var cPlayer = it.next();
-	    if ((cPlayer.getLevel() >= 25 && cPlayer.getLevel() <= 200) || cPlayer.getJobId() == 900) {
+	    if ((cPlayer.getLevel() >= 1 && cPlayer.getLevel() <= 200) || cPlayer.getJobId() == 900) {
 		levelValid += 1;
 	    } else {
 		next = false;

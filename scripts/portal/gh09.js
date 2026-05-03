@@ -1,4 +1,4 @@
 function enter(pi) {
-	pi.playerMessage(5, "很抱歉，轉蛋屋暫時不開放!");
-	return false;
+	pi.warp(749050400, 0); // 將玩家傳送到轉蛋屋的地圖ID
+	return true;
 }
