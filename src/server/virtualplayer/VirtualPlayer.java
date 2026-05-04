@@ -388,19 +388,14 @@ public class VirtualPlayer {
     }
 
     private int calculateBasicAttackDamage() {
-        // Simple damage calculation based on stats
-        int atk = (int) character.getStat().getCurrentMaxBaseDamage();
-
-        // Ensure minimum damage
-        if (atk < 100) {
-            atk = 100 + character.getLevel() * 10;
-        }
+        MapleCharacter src = (owner != null) ? owner : character;
+        int atk = (int) src.getStat().getCurrentMaxBaseDamage()*3;
 
         int minDmg = (int) (atk * 0.8);
         int maxDmg = atk;
         int damage = minDmg + (int) (Math.random() * (maxDmg - minDmg + 1));
 
-        return Math.max(damage, 1); // At least 1 damage
+        return Math.max(damage, 1);
     }
 
     // ==================== Chat AI ====================
