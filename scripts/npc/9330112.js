@@ -9,8 +9,9 @@ var req = [5220000, 1];
 var erasers = [4001197, 4001116, 4001038, 4001039, 4001040, 4001041, 4001042, 4001043, 4001115];
 var lottery = [4031365]
 var maple = [4001126]
+var scroll = [2340000]
 // var itemList = [].concat(erasers);
-var itemList = [].concat(erasers, lottery, maple);
+var itemList = [].concat(erasers, lottery, maple, scroll);
 
 function start() {
   action(1, 0, 0);

@@ -40,7 +40,7 @@ function action(mode, type, selection) {
                 while (it.hasNext()) {
                     var cPlayer = it.next();
                     var ccPlayer = cm.getPlayer().getMap().getCharacterById(cPlayer.getId());
-                    if (ccPlayer == null || ccPlayer.getLevel() < 40) {
+                    if (ccPlayer == null || ccPlayer.getLevel() < 0) {
                         next = false;
                         break;
                     }
