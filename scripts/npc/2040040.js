@@ -14,13 +14,13 @@ function action(mode, type, selection) {
 	    var stage5leader = eim.getProperty("stage5leader");
 	    if (stage5leader == "done") {
 
-		if (cm.haveItem(4001022,24)) { // Clear stage
+		if (cm.haveItem(4001022,20)) { // Clear stage
 		    cm.sendNext("恭喜！你已經通過了第五階段。快點現在，到第6階段。");
 		    cm.removeAll(4001022);
 		    clear(5,eim,cm);
 		    cm.givePartyExp(exp, eim.getPlayers());
 		} else { // Not done yet
-		    cm.sendNext("你確定你有收集了 #r24張 #t4001022##k？？");
+		    cm.sendNext("你確定你有收集了 #r20張 #t4001022##k？？");
 		}
 		cm.safeDispose();
 	    } else {

@@ -174,7 +174,7 @@ function failstage(eim, cm) {
 }
 
 function boxStage(cm) {
-    var debug = false;
+    var debug = true;
     var eim = cm.getEventInstance();
     var nthtext = "eighth";
     var nthobj = "boxes";

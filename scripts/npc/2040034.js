@@ -3,10 +3,10 @@
 */
 
 var status = -1;
-var minLevel = 35; // 35
-var maxLevel = 50; // 65
+var minLevel = 1; // 35
+var maxLevel = 200; // 65
 
-var minPartySize = 6;
+var minPartySize = 1;
 var maxPartySize = 6;
 
 function action(mode, type, selection) {
@@ -76,14 +76,14 @@ function action(mode, type, selection) {
 	    cm.sendOk("做好了。");
 	} else if (!cm.canHold(1022073,1)) {
 	    cm.sendOk("請空出一些裝備攔空間。");
-	} else if (cmp != null && parseInt(cmp) >= 35) {
+	} else if (cmp != null && parseInt(cmp) >= 1) {
 	    if (cm.getPlayer().getOneInfo(1202, "have") == null || cm.getPlayer().getOneInfo(1202, "have").equals("0")) {
 	    	cm.gainItem(1022073, 1, true); //should handle automatically for "have"
 	    } else {
 		cm.sendOk("你已經有#t1022073#了.");
 	    }
 	} else {
-	    cm.sendOk("你還沒有做35次PQ 目前做了: " + (cmp == null ? "0" : cmp) + "次");
+	    cm.sendOk("你還沒有做1次PQ 目前做了: " + (cmp == null ? "0" : cmp) + "次");
 	}
 	cm.dispose();
 
